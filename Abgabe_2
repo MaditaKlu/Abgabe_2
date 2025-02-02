@@ -1,0 +1,297 @@
+#Abgabe2
+#3.1 
+
+# Wichtelproblem: Wie hoch ist die Wahrscheinlichkeit, bei 8 wichtelnden 
+# Personen (n=8), dass keine Person, ihr eigenes Geschenk zurück erhält?
+# Anzahl der wichtelnden Personen
+n<- 8
+# Anzahl Simulationen
+interations <- 10000
+# Simulation durchführen
+wichtel_unglueck<- function(n, interations=10000){
+  # Möglichkeit sein eigenes Geschenk zu erhalten = 0
+  count_unlucky<- 0
+  
+  # Durchführung der Simulation
+  for (i in 1:interations){
+    # zufällige Verteilung der Wichtelgeschenke
+    gifts<- sample(1:n)
+    # Überprüfen, ob jemand sein eigenes Geschenk zurück erhält
+    if (all(gifts !=1:n)) {
+      count_unlucky<- count_unlucky +1
+    }
+  }
+  
+  # simulierte Wahrscheinlichkeit berechnen
+  probability<- count_unlucky / interations
+  # berechnete Wahrscheinlichkeit wird angezeigt 
+  print(probability)
+}
+# Wahrscheinlichkeit in Prozenten
+wahrscheinlichkeit<- wichtel_unglueck(8)*100
+
+#3.2
+
+#Funktion zum simulieren der Wahrscheinlichkeit k unter n Personen
+wichtel_unglueck <- function(n,k,interations= 1e6){
+  count_unlucky <- 0
+  
+  # Zufällige Verteilung der Wichtelgeschenke 
+  for (i in 1:interations){
+    gifts <- sample(1:n) 
+    # Schauen, ob mindestens k personen ihr eigenes Geschenk zurück erhalten haben
+    if (sum(gifts== seq_along(gifts)) >=k) { 
+      count_unlucky <- count_unlucky + 1
+    }
+  }
+  # Wahrscheinlichkeit berechnen
+  probability <- count_unlucky / interations 
+  print(probability)
+}
+# Berechnen der Wahrscheinlichkeit mit n=8 und k=1 
+wahrscheinlichkeit<- wichtel_unglueck(8,1)*100
+
+# Berechnen der Wahrscheinlichkeit mit n=8 und k=2
+wahrscheinlichkeit<- wichtel_unglueck(8,2)*100
+
+#3.4
+
+# 1. Testfall: Richtige Anordnung wird erkannt
+library(testthat)
+test_that("wichtel_unglueck erkennt richtige Anordnung", {
+  # 1. Testfall: Eine gültige Anordnung für n=8
+  expect_true(wichtel_unglueck(c(2,3,4,5,6,7,8,1)))
+})
+
+# 2. Testfall: Falsche Anordnung wird erkannt
+library(testthat) 
+test_that("wichtel_unglueck erkennt falsche Anordnung", {
+  # 2. Testfall: Keine gültige Anordnung für n=8, weil Person 2 ihr eigenes Geschenk hat 
+  expect_false(wichtel_unglueck(c(1,3,4,5,6,7,8,2)))
+})
+
+# 3. Testfall: Falsche Anordnung wird mit Error bestimmt 
+library(testthat)
+test_that("wichtel_unglueck erkennt falsche Anordnung mit Error", {
+  expect_error(wichtel_unglueck(c(1,3,4,5,6,7,8,2)))
+})
+
+# 4. Testfall: Richtige Anordnung wird erkannt
+library(testthat)
+test_that("wichtel_unglueck erkennt richtige Anordnung", {
+  expect_true(wichtel_unglueck(c(3,4,5,6,7,8,1,2)))
+})
+
+#3.5
+
+#Daten einlesen 
+library(readr)
+data<- read.csv(file.choose(),header = TRUE, stringsAsFactors = FALSE, sep = ",", dec = ".")
+head(data)
+
+#Daten nach Gruppe 24 filtern 
+subset(data, group== "24")
+group_24<- subset(data, group== "24")
+
+#Überprüfung auf NAs
+anyNA(group_24)
+colSums(is.na(group_24)) 
+
+
+
+#NAs in min Temperature entfernen 
+group_24$min_temperature[is.na(group_24$min_temperature)] <- median(group_24$min_temperature, na.rm = TRUE)
+
+#NAs in average Temperature entfernen 
+group_24$average_temperature[is.na(group_24$average_temperature)] <- median(group_24$average_temperature, na.rm = TRUE)
+
+#NAs in max Temperature entfernen 
+group_24$max_temperature[is.na(group_24$max_temperature)] <- median(group_24$max_temperature, na.rm = TRUE)
+
+#NAs in windspeed entfernen 
+group_24$windspeed[is.na(group_24$windspeed)] <- mean(group_24$windspeed, na.rm = TRUE)
+
+#NAs in precipitation entfernen
+group_24$precipitation[is.na(group_24$precipitation)] <- median(group_24$precipitation, na.rm = TRUE)
+
+#NAs in count entfernen
+group_24$count[is.na(group_24$count)] <- median(group_24$count, na.rm = TRUE)
+library(inputeTS)
+
+#Temperaturen umrechnen
+#min Temperature
+group_24$min_temperature <- (group_24$min_temperature - 32) * 5/9
+colnames(group_24)[which(names(group_24) == "temp_F")] <- "temp_C"
+summary(group_24$temp_C)
+#average Temperature
+group_24$average_temperature <- (group_24$average_temperature - 32) * 5/9
+colnames(group_24)[which(names(group_24) == "temp_F")] <- "temp_C"
+summary(group_24$temp_C)
+#max Temperature
+group_24$max_temperature <- (group_24$max_temperature - 32) * 5/9
+colnames(group_24)[which(names(group_24) == "temp_F")] <- "temp_C"
+summary(group_24$temp_C)
+
+#Monat mit der höchsten Gesamtanzahl ausgeliehener Fahrräder
+monthly_bike_counts <- aggregate(group_24$count, 
+                                 by = list(Month = group_24$month_of_year), 
+                                 FUN = sum)
+best_month <- monthly_bike_counts[which.max(monthly_bike_counts$x), ]
+print(best_month)
+
+#Aufgabe 4---------------------------------------------------------------------
+#4.2
+
+#Pakete laden 
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+install.packages("ggthemes")
+library(ggthemes)
+install.packages("gridExtra")
+library(gridExtra)
+
+#Grafiken erstellen
+ggplot(group_24, aes(x = average_temperature, y = count)) +
+  geom_point(alpha = 0.5, color = "blue") + 
+  labs(title = "Zusammenhang zwischen Temperatur und Anzahl ausgeliehener Fahrräder",
+       x = "Temperatur (°C)",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+ggplot(group_24, aes(x = precipitation, y = count)) +
+  geom_point(alpha = 0.5, color = "red") +
+  labs(title = "Zusammenhang zwischen Niederschlag und Anzahl ausgeliehener Fahrräder",
+       x = "Niederschlagsmenge (mm)",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+ggplot(group_24, aes(x = windspeed, y = count)) +
+  geom_point(alpha = 0.5, color = "darkgreen") +
+  labs(title = "Zusammenhang zwischen der Windgeschwindigkeit und Anzahl ausgeliehener Fahrräder",
+       x = "Windgeschwindigkeit (km/h)",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+ggplot(group_24, aes(x = day_of_year, y = count)) +
+  geom_line(color = "darkblue") +
+  labs(title = "Zeitlicher Verlauf der Fahrradausleihen",
+       x = "Tag des Jahres",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+
+#4.3
+
+# Daten filtern und neue Spalte für Regentage hinzufügen
+group_24<- group_24%>%
+  mutate(rain_day = ifelse(precipitation > 0, "Regen", "Kein Regen"))
+#kein Regen
+ggplot(group_24 %>% filter(rain_day == "Kein Regen"), aes(x = average_temperature, y = count)) +
+  geom_point(alpha = 0.5, color = "blue") + 
+  labs(title = "Fahrradausleihe vs. Temperatur (Kein Regen)",
+       x = "Temperatur (°C)",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+#Regen 
+ggplot(group_24 %>% filter(rain_day == "Regen"), aes(x = average_temperature, y = count)) +
+  geom_point(alpha = 0.5, color = "red") +
+  labs(title = "Fahrradausleihe vs. Temperatur (Regen)",
+       x = "Temperatur (°C)",
+       y = "Anzahl ausgeliehener Fahrräder") +
+  theme_minimal()
+
+#4.4 
+
+#Verteilung der Anzahl ausgeliehener Fahrräder 
+ggplot(group_24, aes(x=count)) + 
+  geom_histogram(binwidth = 10, fill= "blue", color= "black", alpha = 0.7) +
+  labs(title = "Verteilung der Anzahl ausgeliehener Fahrräder",
+       x= "Anzahl ausgeliehener Fahrräder", 
+       y= "Häufigkeiten")
+#Verteilung der Temperaatur 
+ggplot(group_24, aes(y=average_temperature))+
+  geom_boxplot(fill= "red", alpha= 0.5, outlier.color = "black")+
+  labs(title = "Verteilung Temperatur",
+       y= "Temperatur ")
+ggplot(group_24, aes(x= average_temperature)) + 
+  geom_histogram(binwidth = 10, fill= "blue", color= "black", alpha = 0.7) +
+  labs(title = "Verteilung der Temperatur in °C ",
+       x= "Temperatur in °C", 
+       y= "Häufigkeiten")
+#Verteilung der Niederschlagsmenge 
+ggplot(group_24, aes(y=precipitation))+
+  geom_boxplot(fill= "red", alpha= 0.5, outlier.color = "red")+
+  labs(title = "Verteilung der Niederschlagsmenge in mm",
+       y= "Niederschlagsmenge in mm")+
+  theme_minimal()
+
+#Verteilung Windgeschwindigkeit 
+ggplot(group_24, aes(y=windspeed))+
+  geom_boxplot(fill= "red", alpha= 0.5, outlier.color = "black")+
+  labs(title = "Verteilung der Windgeschwindigkeit in km/h",
+       y= "Windspeed in km/h") + 
+  theme_minimal()
+
+#4.5 
+
+#Daten aufbereiten
+group_24<- group_24 %>% filter(!is.na(date)) 
+group_24$date <- as.Date(group_24$date) 
+
+# Funktion zur Bestimmung der Jahreszeit
+get_season <- function(date) {
+  month <- as.integer(format(date, "%m"))  
+  if (month %in% c(3, 4, 5)) {
+    return("Frühling")
+  } else if (month %in% c(6, 7, 8)) {
+    return("Sommer")
+  } else if (month %in% c(9, 10, 11)) {
+    return("Herbst")
+  } else {
+    return("Winter")
+  }
+}
+
+# Neue Spalte für die Jahreszeit erstellen
+group_24$season <- sapply(group_24$date, get_season)
+
+# Jahreszeiten als Faktor setzen
+group_24$season <- factor(group_24$season, levels = c("Frühling", "Sommer", "Herbst", "Winter"))
+#Überprüfen 
+table(group_24$season)
+#Grafik erstellen 
+ggplot(group_24, aes(x = count, fill = season, color = season)) +
+  geom_density(alpha = 0.3, adjust = 1.1) + 
+  scale_fill_manual(values = c("Frühling" = "green", "Sommer" = "yellow", "Herbst" = "red", "Winter" = "blue")) +
+  scale_color_manual(values = c("Frühling" = "darkgreen", "Sommer" = "orange", "Herbst" = "darkred", "Winter" = "darkblue")) +
+  labs(title = "Verteilung der Anzahl ausgeliehener Fahrräder getrennt nach Jahreszeit",
+       x = "Anzahl ausgeliehener Fahrräder",
+       y = "Dichte",
+       fill = "Jahreszeit",
+       color = "Jahreszeit") +
+  theme_minimal()
+
+#4.6
+
+#Paket installieren 
+install.packages("plotly")
+library(plotly)
+
+#3D-Scatterplot erstellen 
+
+plot_ly(
+  data = group_24, 
+  x = ~average_temperature, 
+  y = ~windspeed, 
+  z = ~count, 
+  color = ~count, 
+  type = "scatter3d", 
+  mode = "markers",
+  marker = list(size = 5, opacity = 0.6)
+) %>%
+  layout(
+    title = "3D-Scatterplot mit Temperatur, Windgeschwindigkeit & Anzahl Fahrradausleihen",
+    scene = list(
+      xaxis = list(title = "Temperatur (°C)"),
+      yaxis = list(title = "Windgeschwindigkeit (km/h)"),
+      zaxis = list(title = "Anzahl ausgeliehener Fahrräder")
+    )
+  )
